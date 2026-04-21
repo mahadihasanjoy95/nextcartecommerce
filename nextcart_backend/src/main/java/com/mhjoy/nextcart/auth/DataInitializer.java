@@ -150,6 +150,8 @@ public class DataInitializer implements ApplicationRunner {
                 new Object[]{"product:read",            "Read/list products (public catalogue)",          "product"},
                 new Object[]{"category:read",           "Read/list categories (public catalogue)",        "product"},
                 new Object[]{"brand:read",              "Read/list brands (public catalogue)",            "product"},
+                // ── Bookmark ──────────────────────────────────────────────────────────
+                new Object[]{"bookmark:manage",         "Manage own bookmarked products",           "bookmark"},
                 // ── API Map ───────────────────────────────────────────────────────────
                 // api-map:manage  — SUPER_ADMIN only: create/delete maps, create permissions
                 // api-map:toggle  — ADMIN: read maps, toggle is_public / active
@@ -219,7 +221,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedCustomerRolePermissions(Role customerRole, Map<String, Permission> permissions) {
-        List<String> customerCodes = List.of("product:read", "category:read", "brand:read");
+        List<String> customerCodes = List.of("product:read", "category:read", "brand:read", "bookmark:manage");
         boolean changed = false;
         for (String code : customerCodes) {
             Permission p = permissions.get(code);
@@ -243,7 +245,12 @@ public class DataInitializer implements ApplicationRunner {
                 new Object[]{"POST", "/api/v1/auth/login",            "Login — returns token pair"},
                 new Object[]{"POST", "/api/v1/auth/refresh",          "Refresh token rotation"},
                 new Object[]{"POST", "/api/v1/auth/forgot-password",  "Request password reset email"},
-                new Object[]{"POST", "/api/v1/auth/reset-password",   "Reset password via token"}
+                new Object[]{"POST", "/api/v1/auth/reset-password",   "Reset password via token"},
+                // ── Public catalogue — anyone can browse without logging in ──────────
+                new Object[]{"GET",  "/api/v1/products",              "List products — public"},
+                new Object[]{"GET",  "/api/v1/products/**",           "Get product details — public"},
+                new Object[]{"GET",  "/api/v1/categories",            "List categories — public"},
+                new Object[]{"GET",  "/api/v1/brands",                "List brands — public"}
         );
 
         for (Object[] def : publicMappings) {
@@ -257,8 +264,13 @@ public class DataInitializer implements ApplicationRunner {
 
         // ── Authenticated-only routes (any valid JWT, no specific permission) ──
         List<Object[]> authOnlyMappings = List.of(
-                new Object[]{"POST", "/api/v1/auth/logout", "Logout — revoke refresh token"},
-                new Object[]{"GET",  "/api/v1/auth/me",     "Get current user profile"}
+                new Object[]{"POST",   "/api/v1/auth/logout",              "Logout — revoke refresh token"},
+                new Object[]{"GET",    "/api/v1/auth/me",                  "Get current user profile"},
+                // ── Bookmarks — any authenticated user (customer, admin, etc.) ──────
+                new Object[]{"POST",   "/api/v1/bookmarks/**",             "Add product to bookmarks"},
+                new Object[]{"DELETE", "/api/v1/bookmarks/**",             "Remove product from bookmarks"},
+                new Object[]{"GET",    "/api/v1/bookmarks",                "Get user's bookmarked products (paginated)"},
+                new Object[]{"GET",    "/api/v1/bookmarks/**",             "Get bookmark sub-resources (ids, status)"}
         );
 
         for (Object[] def : authOnlyMappings) {
@@ -279,8 +291,7 @@ public class DataInitializer implements ApplicationRunner {
         //
         List<Object[]> protectedMappings = List.of(
                 // ── Products ────────────────────────────────────────────────────────
-                new Object[]{"GET",    "/api/v1/products",                  "product:read",            "List products"},
-                new Object[]{"GET",    "/api/v1/products/**",               "product:read",            "Get product details"},
+                // NOTE: GET /api/v1/products and GET /api/v1/products/** are public — seeded above
                 new Object[]{"GET",    "/api/v1/admin/products",            "product:read-admin",      "List products for admin"},
                 new Object[]{"GET",    "/api/v1/admin/products/**",         "product:read-admin",      "Get product details for admin"},
                 new Object[]{"POST",   "/api/v1/products",                  "product:create",          "Create product"},
@@ -288,13 +299,13 @@ public class DataInitializer implements ApplicationRunner {
                 new Object[]{"PATCH",  "/api/v1/products/**",               "product:update",          "Patch product"},
                 new Object[]{"DELETE", "/api/v1/products/**",               "product:delete",          "Delete product"},
                 // ── Categories ──────────────────────────────────────────────────────
-                new Object[]{"GET",    "/api/v1/categories",                "category:read",           "List categories"},
+                // NOTE: GET /api/v1/categories is public — seeded above
                 new Object[]{"POST",   "/api/v1/categories",                "category:create",         "Create category"},
                 new Object[]{"PUT",    "/api/v1/categories/**",             "category:update",         "Update category"},
                 new Object[]{"PATCH",  "/api/v1/categories/**",             "category:update",         "Patch category"},
                 new Object[]{"DELETE", "/api/v1/categories/**",             "category:delete",         "Delete category"},
                 // ── Brands ──────────────────────────────────────────────────────────
-                new Object[]{"GET",    "/api/v1/brands",                    "brand:read",              "List brands"},
+                // NOTE: GET /api/v1/brands is public — seeded above
                 new Object[]{"POST",   "/api/v1/brands",                    "brand:create",            "Create brand"},
                 new Object[]{"PUT",    "/api/v1/brands/**",                 "brand:update",            "Update brand"},
                 new Object[]{"PATCH",  "/api/v1/brands/**",                 "brand:update",            "Patch brand"},
@@ -346,19 +357,34 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-     * Corrects permission codes on already-seeded api_permission_map rows.
-     * Runs on every startup — only updates rows where the permission code has changed.
-     * This handles existing databases that were seeded with old/wrong permission codes.
+     * Corrects api_permission_map rows that were seeded incorrectly in older deployments.
+     * Runs on every startup — only updates rows that don't match the correct state.
      */
     private void correctApiPermissionMaps(Map<String, Permission> permissions) {
-        // method, pathPattern → correct permissionCode
+
+        // ── Repair public catalogue routes — flip any existing permission-based rows to public ──
+        List<String[]> publicRepairs = List.of(
+                new String[]{"GET", "/api/v1/products"},
+                new String[]{"GET", "/api/v1/products/**"},
+                new String[]{"GET", "/api/v1/categories"},
+                new String[]{"GET", "/api/v1/brands"}
+        );
+
+        for (String[] def : publicRepairs) {
+            apiPermissionMapRepository.findByHttpMethodIgnoreCaseAndPathPattern(def[0], def[1])
+                    .ifPresent(map -> {
+                        if (!map.isPublic()) {
+                            map.setPublic(true);
+                            map.setPermission(null);
+                            map.setAuthenticatedOnly(false);
+                            apiPermissionMapRepository.save(map);
+                            log.info("Repaired api map to public: {} {}", def[0], def[1]);
+                        }
+                    });
+        }
+
+        // ── Correct permission codes on admin-management routes ──────────────────
         List<Object[]> corrections = List.of(
-                // Migrate public catalogue routes → permission-based (existing DB rows)
-                new Object[]{"GET",   "/api/v1/products",                "product:read"},
-                new Object[]{"GET",   "/api/v1/products/**",             "product:read"},
-                new Object[]{"GET",   "/api/v1/categories",              "category:read"},
-                new Object[]{"GET",   "/api/v1/brands",                  "brand:read"},
-                // Correct permission codes on admin-management routes
                 new Object[]{"POST",  "/api/v1/permissions",             "api-map:manage"},
                 new Object[]{"GET",   "/api/v1/api-permission-maps",     "api-map:toggle"},
                 new Object[]{"PATCH", "/api/v1/api-permission-maps/**",  "api-map:toggle"}

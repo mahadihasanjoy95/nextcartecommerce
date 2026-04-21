@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { RiLoginCircleLine } from 'react-icons/ri'
+import { RiLoginCircleLine, RiArrowLeftLine } from 'react-icons/ri'
 import InputField from '@/components/common/InputField'
 import { useAuth } from '@/hooks/useAuth'
 import { validateLoginForm } from '@/utils/validators'
@@ -56,6 +56,14 @@ function LoginPage() {
 
   return (
     <div className="animate-fade-in">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 mb-6 font-body text-sm text-gray-400 hover:text-brand-pink-500 transition-colors duration-150"
+      >
+        <RiArrowLeftLine className="w-4 h-4" />
+        Back to Home
+      </Link>
+
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-semibold text-gray-900 mb-2">
           Welcome Back

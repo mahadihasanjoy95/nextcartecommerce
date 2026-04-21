@@ -11,6 +11,8 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 export const ENDPOINTS = {
   PRODUCTS:        '/api/v1/products',
   PRODUCT_BY_SLUG: '/api/v1/products/slug',
+  BOOKMARKS:       '/api/v1/bookmarks',
+  BOOKMARK_IDS:    '/api/v1/bookmarks/ids',
   AUTH: {
     REGISTER:        '/api/v1/auth/register',
     LOGIN:           '/api/v1/auth/login',

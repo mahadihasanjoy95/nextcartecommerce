@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from '@/context/AuthContext'
+import { BookmarkProvider } from '@/context/BookmarkContext'
 import App from './App'
 import './styles/index.css'
 
@@ -30,7 +31,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <BookmarkProvider>
+            <App />
+          </BookmarkProvider>
         </AuthProvider>
       </BrowserRouter>
       {/* DevTools panel is stripped automatically in production builds */}

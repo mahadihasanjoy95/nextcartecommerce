@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { RiArrowRightLine, RiShieldCheckLine, RiTruckLine, RiRefreshLine } from 'react-icons/ri'
 import Button from '@/components/common/Button'
+import { useProducts } from '@/hooks/useProducts'
 
 /**
  * HeroSection — full-width landing banner at the top of the homepage.
@@ -12,6 +13,9 @@ import Button from '@/components/common/Button'
  * navigating away, so the user sees the full grid instantly.
  */
 function HeroSection() {
+  const { pageInfo, isLoading: countLoading, isError: countError } = useProducts({ size: 1 })
+  const productCount = (countLoading || countError) ? '...' : `${pageInfo.totalElements}+`
+
   const scrollToProducts = () => {
     document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -113,7 +117,7 @@ function HeroSection() {
                 <span className="text-brand-pink-500 text-lg">✦</span>
               </div>
               <div>
-                <p className="font-heading text-lg font-semibold text-gray-900 leading-none">23+</p>
+                <p className="font-heading text-lg font-semibold text-gray-900 leading-none">{productCount}</p>
                 <p className="font-body text-xs text-gray-400 mt-0.5">Products</p>
               </div>
             </div>
