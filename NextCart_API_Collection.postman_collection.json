@@ -1,0 +1,635 @@
+{
+  "info": {
+    "name": "NextCart Fashion House API",
+    "_postman_id": "nextcart-fashion-house-api-v1",
+    "description": "Complete API collection for NextCart Fashion House backend. Organized by module.\n\n**Setup:**\n1. Set `base_url` variable to `http://localhost:8080`\n2. Login using **Auth → Login** — the access token is automatically saved to `access_token` variable\n3. Use **Auth → Refresh** to rotate tokens\n\n**Variables used:**\n- `{{base_url}}` — e.g. `http://localhost:8080`\n- `{{access_token}}` — auto-set after login\n- `{{refresh_token}}` — auto-set after login",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "description": "Register, login, refresh tokens, logout and current user profile.",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@nextcart.com\",\n  \"password\": \"Customer@123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Self-registration for customers. Creates a user with CUSTOMER role and a customer_profile row. Email must be unique."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data) {",
+                  "    pm.collectionVariables.set('access_token', res.data.accessToken);",
+                  "    pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "    console.log('Tokens saved to collection variables.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@nextcart.com\",\n  \"password\": \"SuperAdmin@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login with email and password. Returns accessToken (1h) and refreshToken (30d).\n\n**Post-response script automatically saves both tokens to collection variables.**"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data) {",
+                  "    pm.collectionVariables.set('access_token', res.data.accessToken);",
+                  "    pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "    console.log('Tokens rotated and saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Exchange a valid refresh token for a new access + refresh token pair. The old refresh token is immediately revoked (single-use rotation)."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Revokes the provided refresh token. Requires a valid access token in Authorization header."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Returns the profile of the currently authenticated user. Requires any valid access token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 User Management",
+      "description": "Create admin users, list users, get by ID, assign roles, enable/disable accounts.\n\nAll endpoints require a valid Bearer token and appropriate permissions.",
+      "item": [
+        {
+          "name": "Create Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@nextcart.com\",\n  \"password\": \"Admin@123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"roleName\": \"ADMIN\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new staff (admin) user account. Requires `user:create` permission.\n\n`roleName` must be one of: `SUPER_ADMIN`, `ADMIN`, `CUSTOMER`"
+          },
+          "response": []
+        },
+        {
+          "name": "List Users (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users?page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            },
+            "description": "Returns a paginated list of all users sorted by creation date descending. Requires `user:read` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            },
+            "description": "Returns a single user by their ID. Requires `user:read` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/2/role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "2", "role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"ADMIN\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Assigns a new role to a user. Replaces the existing role (each user has exactly one role). Also revokes all active refresh tokens for the user.\n\nRequires `role:permission-assign` permission.\n\n`roleName` must be one of: `SUPER_ADMIN`, `ADMIN`, `CUSTOMER`"
+          },
+          "response": []
+        },
+        {
+          "name": "Enable User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/2/enable",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "2", "enable"]
+            },
+            "description": "Re-enables a previously disabled user account. Requires `user:disable` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Disable User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/2/disable",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "2", "disable"]
+            },
+            "description": "Disables a user account. Revokes all active refresh tokens. Subsequent requests with their JWT will be rejected with 401. Requires `user:disable` permission."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔑 Role & Permission Management",
+      "description": "Create permissions, list all permissions, assign/revoke permissions for a role. Requires `role:permission-assign` permission.",
+      "item": [
+        {
+          "name": "List All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "permissions"]
+            },
+            "description": "Returns all permission codes available in the system. Requires `role:permission-assign` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"order:read\",\n  \"description\": \"Read order details\",\n  \"module\": \"order\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new permission entry. `code` must be unique and follow `module:action` convention. Requires `role:permission-assign` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/roles/2/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles", "2", "permissions"]
+            },
+            "description": "Returns the role details along with all permissions currently assigned to it.\n\nRole IDs (seeded defaults):\n- `1` = SUPER_ADMIN\n- `2` = ADMIN\n- `3` = CUSTOMER\n\nRequires `role:permission-assign` permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Permissions to Role (Bulk Replace)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/roles/2/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles", "2", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Bulk assigns a set of permissions to a role. This **replaces** the entire existing permission set for that role.\n\nTo revoke all permissions, pass an empty array: `{ \"permissionIds\": [] }`\n\nRequires `role:permission-assign` permission."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🗺️ API Permission Map Management",
+      "description": "Manage the runtime mapping of HTTP method + path pattern → required permission. Changes take effect within 60 seconds (cache TTL). Requires `api-map:manage` permission (SUPER_ADMIN only by default).",
+      "item": [
+        {
+          "name": "List API Permission Maps",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/api-permission-maps",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "api-permission-maps"]
+            },
+            "description": "Returns all API → permission mappings. Shows both active and inactive entries."
+          },
+          "response": []
+        },
+        {
+          "name": "Create API Permission Map",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/api-permission-maps",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "api-permission-maps"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"httpMethod\": \"GET\",\n  \"pathPattern\": \"/api/v1/orders/**\",\n  \"permissionCode\": \"order:read\",\n  \"description\": \"Read order details\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new HTTP method + path → permission mapping. Use Ant-style path patterns (e.g. `/api/v1/orders/**`).\n\nThe method + path combination must be unique. Cache is evicted immediately so the rule takes effect within 60s."
+          },
+          "response": []
+        },
+        {
+          "name": "Update API Permission Map",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/api-permission-maps/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "api-permission-maps", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionCode\": \"order:read\",\n  \"active\": false,\n  \"description\": \"Temporarily disabled\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Updates the permission code, active flag, or description of an existing mapping. All fields are optional — only provided fields are changed.\n\nSetting `active: false` effectively disables the guard for that endpoint without deleting the rule."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete API Permission Map",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/api-permission-maps/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "api-permission-maps", "1"]
+            },
+            "description": "Permanently deletes an API permission mapping. Cache is evicted immediately. Warning: deleting a mapping for an active endpoint causes fail-closed 403 for all requests to that endpoint."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📦 Product Management",
+      "description": "Public product read APIs (no auth required) and protected admin write APIs.",
+      "item": [
+        {
+          "name": "List / Search Products (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products?page=0&size=20&sortBy=createdAt&sortDir=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                { "key": "page", "value": "0", "description": "Page number (0-based)" },
+                { "key": "size", "value": "20", "description": "Page size" },
+                { "key": "sortBy", "value": "createdAt", "description": "Sort field" },
+                { "key": "sortDir", "value": "desc", "description": "Sort direction: asc | desc" },
+                { "key": "q", "value": "", "description": "Keyword search", "disabled": true },
+                { "key": "categoryId", "value": "", "description": "Filter by category ID", "disabled": true },
+                { "key": "brandId", "value": "", "description": "Filter by brand ID", "disabled": true },
+                { "key": "featured", "value": "true", "description": "Filter featured products", "disabled": true },
+                { "key": "newArrival", "value": "true", "description": "Filter new arrivals", "disabled": true }
+              ]
+            },
+            "description": "Public endpoint — no authentication required. Returns paginated active products. Supports keyword search and filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "1"]
+            },
+            "description": "Public endpoint — no authentication required. Returns full product details by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by Slug (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/slug/my-product-slug",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "slug", "my-product-slug"]
+            },
+            "description": "Public endpoint — no authentication required. Returns an active product by its URL slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Classic White Shirt\",\n  \"slug\": \"classic-white-shirt\",\n  \"shortDescription\": \"A timeless white dress shirt for every occasion.\",\n  \"description\": \"Premium cotton blend fabric with a modern slim fit. Features reinforced stitching, button-down collar, and double-button cuffs. Available in multiple sizes.\",\n  \"productType\": \"SIMPLE\",\n  \"status\": \"ACTIVE\",\n  \"categoryId\": 1,\n  \"brandId\": 1,\n  \"featured\": true,\n  \"newArrival\": true,\n  \"trackInventory\": true,\n  \"inStock\": true,\n  \"basePrice\": 1800.00,\n  \"salePrice\": 1499.00,\n  \"currency\": \"BDT\",\n  \"thumbnailUrl\": \"https://example.com/images/classic-white-shirt.jpg\",\n  \"metaTitle\": \"Classic White Shirt | NextCart\",\n  \"metaDescription\": \"Buy the classic white shirt online at NextCart Fashion House.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new product. Requires `product:create` permission.\n\n`productType`: `SIMPLE` | `VARIABLE`\n`status`: `ACTIVE` | `DRAFT` | `ARCHIVED`\n`salePrice` cannot exceed `basePrice`.\n`slug` must be unique."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Classic White Shirt — Updated\",\n  \"slug\": \"classic-white-shirt\",\n  \"shortDescription\": \"Updated short description.\",\n  \"description\": \"Updated full description with new details.\",\n  \"productType\": \"SIMPLE\",\n  \"status\": \"ACTIVE\",\n  \"categoryId\": 1,\n  \"brandId\": 1,\n  \"featured\": true,\n  \"newArrival\": false,\n  \"trackInventory\": true,\n  \"inStock\": true,\n  \"basePrice\": 2000.00,\n  \"salePrice\": 1699.00,\n  \"currency\": \"BDT\",\n  \"thumbnailUrl\": \"https://example.com/images/classic-white-shirt-v2.jpg\",\n  \"metaTitle\": \"Classic White Shirt | NextCart\",\n  \"metaDescription\": \"Updated meta description.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Full update of an existing product by ID. Requires `product:update` permission."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Category Management",
+      "description": "Create and list product categories.",
+      "item": [
+        {
+          "name": "List All Categories (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Returns the complete list of categories. Public endpoint — no authentication required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Men's Shirts\",\n  \"slug\": \"mens-shirts\",\n  \"description\": \"Formal and casual shirts for men\",\n  \"imageUrl\": \"https://example.com/images/categories/mens-shirts.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new product category. Requires `category:create` permission. `slug` must be unique."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏢 Brand Management",
+      "description": "Create and list product brands.",
+      "item": [
+        {
+          "name": "List All Brands (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/brands",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "brands"]
+            },
+            "description": "Returns the complete list of brands. Public endpoint — no authentication required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Brand",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/brands",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "brands"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arrow\",\n  \"slug\": \"arrow\",\n  \"description\": \"Premium clothing brand\",\n  \"logoUrl\": \"https://example.com/images/brands/arrow-logo.png\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new brand. Requires `brand:create` permission. `slug` must be unique."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

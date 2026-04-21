@@ -1,0 +1,65 @@
+# ─── macOS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ─── IntelliJ IDEA ───────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ─── VS Code ─────────────────────────────────────────────────────────────────
+.vscode/
+
+# ─── Spring Boot / Maven ─────────────────────────────────────────────────────
+nextcart_backend/target/
+nextcart_backend/.mvn/wrapper/maven-wrapper.jar
+nextcart_backend/*.log
+
+# ─── Application secrets (NEVER commit these) ────────────────────────────────
+nextcart_backend/src/main/resources/application-local.properties
+nextcart_backend/src/main/resources/application-prod.properties
+nextcart_backend/src/main/resources/application-dev.properties
+nextcart_backend/src/main/resources/application-qa.properties
+*.env
+.env
+.env.*
+
+# ─── React / Node.js (admin frontend) ────────────────────────────────────────
+nextcart_admin_frontend/node_modules/
+nextcart_admin_frontend/dist/
+nextcart_admin_frontend/.env
+nextcart_admin_frontend/.env.*
+
+# ─── React / Node.js (storefront frontend) ───────────────────────────────────
+nextcart_frontend/node_modules/
+nextcart_frontend/dist/
+nextcart_frontend/build/
+nextcart_frontend/.env
+nextcart_frontend/.env.*
+
+# ─── Flutter / Dart ──────────────────────────────────────────────────────────
+nextcart_mobile/.dart_tool/
+nextcart_mobile/.flutter-plugins
+nextcart_mobile/.flutter-plugins-dependencies
+nextcart_mobile/.packages
+nextcart_mobile/build/
+nextcart_mobile/android/.gradle/
+nextcart_mobile/android/local.properties
+nextcart_mobile/android/app/debug/
+nextcart_mobile/android/app/profile/
+nextcart_mobile/android/app/release/
+nextcart_mobile/ios/.symlinks/
+nextcart_mobile/ios/Pods/
+nextcart_mobile/ios/Flutter/Flutter.framework
+nextcart_mobile/ios/Flutter/Flutter.podspec
+nextcart_mobile/pubspec.lock
+
+# ─── Claude AI worktrees (internal tooling) ──────────────────────────────────
+.claude/worktrees/
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/

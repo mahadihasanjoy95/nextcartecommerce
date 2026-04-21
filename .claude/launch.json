@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nextcart-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "nextcart_frontend", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "nextcart-admin-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "nextcart_admin_frontend", "run", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "nextcart-backend",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["-f", "nextcart_backend/pom.xml", "spring-boot:run"],
+      "port": 8081
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   NextCart Global Styles
+   Order: Tailwind base → custom base → component overrides → utilities
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Custom base resets ─────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply font-body bg-surface text-gray-900;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
+  /* Remove default list styling only when lists are inside components */
+  .reset-list {
+    @apply list-none m-0 p-0;
+  }
+
+  /* Focus ring — visible only on keyboard navigation */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-pink-400 ring-offset-2;
+  }
+}
+
+/* ─── Reusable component classes ─────────────────────────────────────────── */
+@layer components {
+
+  /* ── Page-level container ──────────────────────────────────────────────── */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Primary CTA button ────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-brand-pink-500 text-white font-body font-semibold
+           px-6 py-3 rounded-full
+           shadow-md hover:shadow-glow
+           transition-all duration-300
+           hover:bg-brand-pink-600 hover:-translate-y-0.5
+           active:translate-y-0 active:shadow-md
+           focus-visible:ring-brand-pink-400;
+  }
+
+  /* ── Outline / ghost button ────────────────────────────────────────────── */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           border-2 border-brand-pink-400 text-brand-pink-500 font-body font-semibold
+           px-6 py-3 rounded-full
+           transition-all duration-300
+           hover:bg-brand-pink-50 hover:-translate-y-0.5
+           active:translate-y-0
+           focus-visible:ring-brand-pink-400;
+  }
+
+  /* ── Product card ──────────────────────────────────────────────────────── */
+  .product-card {
+    @apply bg-white rounded-2xl overflow-hidden shadow-card
+           transition-all duration-350
+           hover:-translate-y-2 hover:shadow-card-hover;
+  }
+
+  /* ── Skeleton pulse block ──────────────────────────────────────────────── */
+  .skeleton {
+    @apply bg-gray-200 animate-skeleton rounded-lg;
+  }
+
+  /* ── Section spacing ───────────────────────────────────────────────────── */
+  .section-gap {
+    @apply py-16 md:py-20;
+  }
+
+  /* ── Gradient text (used in hero headline) ─────────────────────────────── */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-pink-500 to-brand-yellow-400
+           bg-clip-text text-transparent;
+  }
+
+  /* ── Soft pill badge ────────────────────────────────────────────────────── */
+  .badge-featured {
+    @apply inline-flex items-center gap-1
+           bg-brand-pink-500 text-white
+           text-[10px] font-semibold uppercase tracking-wider
+           px-2.5 py-1 rounded-full;
+  }
+
+  .badge-new {
+    @apply inline-flex items-center gap-1
+           bg-brand-yellow-400 text-gray-900
+           text-[10px] font-semibold uppercase tracking-wider
+           px-2.5 py-1 rounded-full;
+  }
+
+  .badge-sale {
+    @apply inline-flex items-center gap-1
+           bg-emerald-500 text-white
+           text-[10px] font-semibold uppercase tracking-wider
+           px-2.5 py-1 rounded-full;
+  }
+}
+
+/* ─── Utility overrides ──────────────────────────────────────────────────── */
+@layer utilities {
+  /* Smooth transition for image zoom on card hover */
+  .img-zoom {
+    @apply transition-transform duration-500 ease-out;
+  }
+  .group:hover .img-zoom {
+    @apply scale-110;
+  }
+
+  /* Clip path helpers for diagonal section dividers */
+  .clip-diagonal {
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+  }
+
+  /* Line clamp shorthands */
+  .line-clamp-1 { -webkit-line-clamp: 1; }
+  .line-clamp-2 { -webkit-line-clamp: 2; }
+
+  .duration-350 {
+    transition-duration: 350ms;
+  }
+}
+
+/* ─── Scrollbar styling (Webkit) ─────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: #f1f1f1; }
+::-webkit-scrollbar-thumb  { background: #f9a8be; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #F43F6E; }
