@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   RiArrowLeftLine,
   RiHeart3Line,
-  RiHeartFill,
+  RiHeart3Fill,
   RiShoppingBag3Line,
   RiCheckLine,
   RiTruckLine,
@@ -18,6 +18,8 @@ import {
 import Badge from '@/components/common/Badge'
 import Button from '@/components/common/Button'
 import { useProductBySlug } from '@/hooks/useProducts'
+import { useAuth } from '@/hooks/useAuth'
+import { useBookmarkContext } from '@/context/BookmarkContext'
 import { formatPrice, discountPercent } from '@/utils/formatters'
 
 // ─── Loading skeleton ────────────────────────────────────────────────────────
@@ -196,7 +198,20 @@ function ImageGallery({ images, productName }) {
 // ─── Product Info panel ──────────────────────────────────────────────────────
 
 function ProductInfo({ product }) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const { isBookmarked, toggleBookmark } = useBookmarkContext()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const bookmarked = isBookmarked(product.id)
+
+  const handleBookmarkClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
+    toggleBookmark(product.id)
+  }
 
   const discount   = discountPercent(product.basePrice, product.salePrice)
   const hasDiscount = discount > 0
@@ -323,20 +338,21 @@ function ProductInfo({ product }) {
 
         {/* Wishlist toggle */}
         <button
-          onClick={() => setIsWishlisted(prev => !prev)}
+          onClick={handleBookmarkClick}
+          aria-label={bookmarked ? 'Remove from wishlist' : 'Add to wishlist'}
           className={`w-full inline-flex items-center justify-center gap-2
                      border-2 font-body font-semibold px-6 py-4 rounded-full text-base
                      transition-all duration-200
-                     ${isWishlisted
+                     ${bookmarked
                        ? 'border-brand-pink-400 bg-brand-pink-50 text-brand-pink-500'
                        : 'border-gray-200 text-gray-600 hover:border-brand-pink-300 hover:text-brand-pink-500 hover:bg-brand-pink-50'
                      }`}
         >
-          {isWishlisted
-            ? <RiHeartFill className="w-5 h-5 text-brand-pink-500" />
+          {bookmarked
+            ? <RiHeart3Fill className="w-5 h-5 text-brand-pink-500" />
             : <RiHeart3Line className="w-5 h-5" />
           }
-          {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+          {bookmarked ? 'Wishlisted' : 'Add to Wishlist'}
         </button>
       </div>
 

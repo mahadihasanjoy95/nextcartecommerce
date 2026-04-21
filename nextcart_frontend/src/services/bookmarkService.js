@@ -2,20 +2,31 @@ import apiClient from './apiClient'
 import { ENDPOINTS } from '@/constants/api'
 
 const bookmarkService = {
-  addBookmark: (productId) =>
-    apiClient.post(`${ENDPOINTS.BOOKMARKS}/${productId}`),
+  addBookmark: async (productId) => {
+    await apiClient.post(`${ENDPOINTS.BOOKMARKS}/${productId}`)
+  },
 
-  removeBookmark: (productId) =>
-    apiClient.delete(`${ENDPOINTS.BOOKMARKS}/${productId}`),
+  removeBookmark: async (productId) => {
+    await apiClient.delete(`${ENDPOINTS.BOOKMARKS}/${productId}`)
+  },
 
-  getBookmarks: ({ page = 0, size = 16 } = {}) =>
-    apiClient.get(ENDPOINTS.BOOKMARKS, { params: { page, size } }),
+  // Returns PageResponse<BookmarkedProductResponseDto>
+  getBookmarks: async ({ page = 0, size = 16 } = {}) => {
+    const response = await apiClient.get(ENDPOINTS.BOOKMARKS, { params: { page, size } })
+    return response.data
+  },
 
-  getBookmarkedIds: () =>
-    apiClient.get(ENDPOINTS.BOOKMARK_IDS),
+  // Returns Long[] — the bookmarked product IDs for the current user
+  getBookmarkedIds: async () => {
+    const response = await apiClient.get(ENDPOINTS.BOOKMARK_IDS)
+    return response.data
+  },
 
-  getBookmarkStatus: (productId) =>
-    apiClient.get(`${ENDPOINTS.BOOKMARKS}/${productId}/status`),
+  // Returns BookmarkStatusResponseDto
+  getBookmarkStatus: async (productId) => {
+    const response = await apiClient.get(`${ENDPOINTS.BOOKMARKS}/${productId}/status`)
+    return response.data
+  },
 }
 
 export default bookmarkService
