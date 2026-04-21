@@ -150,6 +150,8 @@ public class DataInitializer implements ApplicationRunner {
                 new Object[]{"product:read",            "Read/list products (public catalogue)",          "product"},
                 new Object[]{"category:read",           "Read/list categories (public catalogue)",        "product"},
                 new Object[]{"brand:read",              "Read/list brands (public catalogue)",            "product"},
+                // ── Bookmark ──────────────────────────────────────────────────────────
+                new Object[]{"bookmark:manage",         "Manage own bookmarked products",           "bookmark"},
                 // ── API Map ───────────────────────────────────────────────────────────
                 // api-map:manage  — SUPER_ADMIN only: create/delete maps, create permissions
                 // api-map:toggle  — ADMIN: read maps, toggle is_public / active
@@ -219,7 +221,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedCustomerRolePermissions(Role customerRole, Map<String, Permission> permissions) {
-        List<String> customerCodes = List.of("product:read", "category:read", "brand:read");
+        List<String> customerCodes = List.of("product:read", "category:read", "brand:read", "bookmark:manage");
         boolean changed = false;
         for (String code : customerCodes) {
             Permission p = permissions.get(code);
@@ -257,8 +259,13 @@ public class DataInitializer implements ApplicationRunner {
 
         // ── Authenticated-only routes (any valid JWT, no specific permission) ──
         List<Object[]> authOnlyMappings = List.of(
-                new Object[]{"POST", "/api/v1/auth/logout", "Logout — revoke refresh token"},
-                new Object[]{"GET",  "/api/v1/auth/me",     "Get current user profile"}
+                new Object[]{"POST",   "/api/v1/auth/logout",              "Logout — revoke refresh token"},
+                new Object[]{"GET",    "/api/v1/auth/me",                  "Get current user profile"},
+                // ── Bookmarks — any authenticated user (customer, admin, etc.) ──────
+                new Object[]{"POST",   "/api/v1/bookmarks/**",             "Add product to bookmarks"},
+                new Object[]{"DELETE", "/api/v1/bookmarks/**",             "Remove product from bookmarks"},
+                new Object[]{"GET",    "/api/v1/bookmarks",                "Get user's bookmarked products (paginated)"},
+                new Object[]{"GET",    "/api/v1/bookmarks/**",             "Get bookmark sub-resources (ids, status)"}
         );
 
         for (Object[] def : authOnlyMappings) {

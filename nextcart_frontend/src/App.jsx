@@ -8,6 +8,7 @@ import ProductDetailsPage from '@/pages/ProductDetailsPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import ProfilePage from '@/pages/ProfilePage'
+import FavouritesPage from '@/pages/FavouritesPage'
 import OAuthCallbackPage from '@/pages/OAuthCallbackPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
@@ -35,7 +36,8 @@ function App() {
 
           {/* Protected pages */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile"    element={<ProfilePage />} />
+            <Route path="/favourites" element={<FavouritesPage />} />
           </Route>
         </Route>
       </Routes>
