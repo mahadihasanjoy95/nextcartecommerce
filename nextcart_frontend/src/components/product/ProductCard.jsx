@@ -1,31 +1,15 @@
-import { Link } from 'react-router-dom'
-import { RiHeart3Line, RiEyeLine } from 'react-icons/ri'
+import { Link, useNavigate } from 'react-router-dom'
+import { RiHeart3Line, RiHeart3Fill, RiEyeLine } from 'react-icons/ri'
 import Badge from '@/components/common/Badge'
 import { formatPrice, discountPercent, truncate, productPath } from '@/utils/formatters'
+import { useAuth } from '@/hooks/useAuth'
+import { useBookmarkContext } from '@/context/BookmarkContext'
 
-/**
- * ProductCard — single product tile rendered in the product grid.
- *
- * Visual structure:
- *  ┌──────────────────────────┐
- *  │  [badge]      [wishlist] │  ← absolute overlay
- *  │                          │
- *  │      product image       │  ← 3:4 aspect ratio, zoom on hover
- *  │                          │
- *  │  [View Details] overlay  │  ← appears on hover
- *  ├──────────────────────────┤
- *  │  Product Name            │
- *  │  Short description       │
- *  │  ৳ 2,999  ~~৳ 3,500~~  -14% │
- *  └──────────────────────────┘
- *
- * Props:
- *  product — ProductResponseDto from the backend
- */
 function ProductCard({ product }) {
   if (!product) return null
 
   const {
+    id,
     name,
     shortDescription,
     basePrice,
@@ -36,9 +20,24 @@ function ProductCard({ product }) {
     currency,
   } = product
 
-  const discount  = discountPercent(basePrice, salePrice)
+  const discount    = discountPercent(basePrice, salePrice)
   const hasDiscount = discount > 0
   const detailPath  = productPath(product)
+
+  const { isAuthenticated } = useAuth()
+  const { isBookmarked, toggleBookmark } = useBookmarkContext()
+  const navigate = useNavigate()
+
+  const bookmarked = isBookmarked(id)
+
+  const handleBookmarkClick = (e) => {
+    e.preventDefault()
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: window.location.pathname } } })
+      return
+    }
+    toggleBookmark(id)
+  }
 
   return (
     <article className="product-card group cursor-pointer">
@@ -75,13 +74,20 @@ function ProductCard({ product }) {
             </div>
           )}
 
-          {/* ── Wishlist — top right ─────────────────────────────────────── */}
+          {/* ── Bookmark — top right ─────────────────────────────────────── */}
           <button
-            aria-label={`Add ${name} to wishlist`}
-            onClick={(e) => e.preventDefault()} // prevent link navigation on click
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-brand-pink-500 hover:bg-white transition-all duration-200 shadow-sm opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
+            aria-label={bookmarked ? `Remove ${name} from favourites` : `Add ${name} to favourites`}
+            onClick={handleBookmarkClick}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 shadow-sm
+              ${bookmarked
+                ? 'opacity-100 text-brand-pink-500 hover:bg-white'
+                : 'opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 text-gray-400 hover:text-brand-pink-500 hover:bg-white'
+              }`}
           >
-            <RiHeart3Line className="w-4 h-4" />
+            {bookmarked
+              ? <RiHeart3Fill className="w-4 h-4" />
+              : <RiHeart3Line  className="w-4 h-4" />
+            }
           </button>
 
         </div>

@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-
 import {
   RiSearchLine,
   RiHeart3Line,
+  RiHeart3Fill,
   RiShoppingBag3Line,
   RiMenuLine,
   RiCloseLine,
@@ -11,6 +12,7 @@ import {
 } from 'react-icons/ri'
 import { APP_NAME, NAV_LINKS } from '@/constants/app'
 import { useAuth } from '@/hooks/useAuth'
+import { useBookmarkContext } from '@/context/BookmarkContext'
 
 /**
  * Navbar — sticky top navigation.
@@ -32,6 +34,7 @@ function Navbar() {
   const [searchValue,    setSearchValue]    = useState('')
   const cartCount = 0 // TODO: replace with cart context value
   const { user, isAuthenticated } = useAuth()
+  const { bookmarkedCount } = useBookmarkContext()
   const userInitial = user?.firstName?.[0]?.toUpperCase() || '?'
   const navigate = useNavigate()
   const location = useLocation()
@@ -156,13 +159,32 @@ function Navbar() {
               <RiSearchLine className="w-5 h-5" />
             </button>
 
-            {/* Wishlist */}
-            <button
-              aria-label="Wishlist"
-              className="p-2.5 rounded-full text-gray-500 hover:text-brand-pink-500 hover:bg-brand-pink-50 transition-all duration-200"
-            >
-              <RiHeart3Line className="w-5 h-5" />
-            </button>
+            {/* Favourites */}
+            {isAuthenticated ? (
+              <Link
+                to="/favourites"
+                aria-label={`My favourites${bookmarkedCount > 0 ? `, ${bookmarkedCount} saved` : ''}`}
+                className="relative p-2.5 rounded-full text-gray-500 hover:text-brand-pink-500 hover:bg-brand-pink-50 transition-all duration-200"
+              >
+                {bookmarkedCount > 0
+                  ? <RiHeart3Fill className="w-5 h-5 text-brand-pink-500" />
+                  : <RiHeart3Line  className="w-5 h-5" />
+                }
+                {bookmarkedCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-brand-pink-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {bookmarkedCount > 9 ? '9+' : bookmarkedCount}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                aria-label="Sign in to save favourites"
+                className="p-2.5 rounded-full text-gray-500 hover:text-brand-pink-500 hover:bg-brand-pink-50 transition-all duration-200"
+              >
+                <RiHeart3Line className="w-5 h-5" />
+              </Link>
+            )}
 
             {/* Account */}
             {isAuthenticated ? (
@@ -256,20 +278,41 @@ function Navbar() {
           <hr className="border-gray-100 my-1" />
 
           {isAuthenticated ? (
-            <NavLink
-              to="/profile"
-              onClick={closeMobile}
-              className={({ isActive }) =>
-                `font-body text-sm font-medium px-3 py-2.5 rounded-lg transition-colors duration-200 flex items-center gap-2
-                ${isActive
-                  ? 'text-brand-pink-500 bg-brand-pink-50'
-                  : 'text-gray-600 hover:text-brand-pink-500 hover:bg-gray-50'
-                }`
-              }
-            >
-              <RiUser3Line className="w-4 h-4" />
-              My Account
-            </NavLink>
+            <>
+              <NavLink
+                to="/favourites"
+                onClick={closeMobile}
+                className={({ isActive }) =>
+                  `font-body text-sm font-medium px-3 py-2.5 rounded-lg transition-colors duration-200 flex items-center gap-2
+                  ${isActive
+                    ? 'text-brand-pink-500 bg-brand-pink-50'
+                    : 'text-gray-600 hover:text-brand-pink-500 hover:bg-gray-50'
+                  }`
+                }
+              >
+                <RiHeart3Fill className="w-4 h-4" />
+                My Favourites
+                {bookmarkedCount > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-brand-pink-500 text-white text-[10px] font-bold">
+                    {bookmarkedCount}
+                  </span>
+                )}
+              </NavLink>
+              <NavLink
+                to="/profile"
+                onClick={closeMobile}
+                className={({ isActive }) =>
+                  `font-body text-sm font-medium px-3 py-2.5 rounded-lg transition-colors duration-200 flex items-center gap-2
+                  ${isActive
+                    ? 'text-brand-pink-500 bg-brand-pink-50'
+                    : 'text-gray-600 hover:text-brand-pink-500 hover:bg-gray-50'
+                  }`
+                }
+              >
+                <RiUser3Line className="w-4 h-4" />
+                My Account
+              </NavLink>
+            </>
           ) : (
             <Link
               to="/login"
