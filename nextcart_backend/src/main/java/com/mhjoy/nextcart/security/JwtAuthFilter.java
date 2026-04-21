@@ -75,12 +75,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(claims);
             UserType userType = jwtService.extractUserType(claims);
 
-            // Skip if already authenticated in this request context
-            if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
             // Verify user still exists and is enabled in DB
             User user = userRepository.findById(userId).orElse(null);
             if (user == null || !user.isEnabled()) {
