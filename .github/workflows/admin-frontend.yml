@@ -65,7 +65,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./dist/*"
-          target: "/var/www/nextcart-admin/"
+          target: "/opt/nextcart/frontend/admin/"
           strip_components: 1
 
       - name: Reload Nginx
